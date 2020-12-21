@@ -1,2 +1,2 @@
 # Shortlinkr
-Basic Scaleable Bitly implementation
+Basic Scalable Bitly implementation

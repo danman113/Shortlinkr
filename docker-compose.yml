@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+    environment:
+      NODE_ENV: development
+  cache:
+    image: "redis:alpine"
+  db:
+    image: "mongo:latest"
+    logging:
+      driver: none

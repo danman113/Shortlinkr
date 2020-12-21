@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="milligram.min.css" />
+  <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+  <title>Shortlinkr</title>
+  <style>
+    .animate-opacity {
+      transition: opacity 500ms ease-out;
+    }
+    .hide-opacity {
+      opacity: 0;
+    }
+    .show-opacity {
+      opacity: 1;
+    }
+    .out-link {
+      padding-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrapper">
+    <h1>Shortlinkr</h1>
+    <code id="error" ></code>
+    <form id="form">
+      <label for="url">URL</label>
+      <input type="url" id='url' name='url' required />
+      <label for="shortlink">shortlink</label>
+      <input type="text" id='shortlink' name='shortlink' />
+      <label for="expiration">expiration</label>
+      <input type="datetime-local" id='expiration' name='expiration' required />
+      <button class='primary' id='submit'>Get Shortlink!</button>
+    </form>
+    <div id='output' class="animate-opacity hide-opacity">
+      <h2>Here's your link! <span id="link" class="out-link"></span></h2>
+      <p>Right-Click > copy link address!</p>
+    </div>
+  </main>
+  <script>
+    const {
+      form,
+      url,
+      shortlink,
+      expiration,
+      submit,
+      link,
+      output,
+      error
+    } = Object
+      .fromEntries(['form', 'url', 'shortlink', 'expiration', 'submit', 'output', 'error', 'link']
+      .map(id => [id, document.getElementById(id)]))
+    const inputFormat = 'YYYY-MM-DDTHH:mm:ss'
+    const now = dayjs()
+    const nextWeek = dayjs().add(7, 'day')
+    const nextYear = dayjs().add(1, 'year')
+    expiration.value = nextWeek.format(inputFormat)
+    expiration.min = now.format(inputFormat)
+    expiration.max = nextYear.format(inputFormat)
+
+    form.onsubmit = async e => {
+      e.preventDefault()
+      const formData = new FormData(form)
+      const res = await fetch('/api/links/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: formData.get('url'),
+          shortlink: formData.get('shortlink'),
+          expiration: formData.get('expiration')
+        })
+      })
+      if (res.status === 404) {
+        return error.innerHTML = 'Sorry, that shortlink is already taken'
+      }
+      const { shortlink } = await res.json()
+      const newLink = document.createElement('a')
+      output.classList.add('show-opacity')
+      output.classList.remove('hide-opacity')
+      newLink.href = shortlink
+      newLink.text = shortlink
+      newLink.target = '_BLANK'
+      link.innerHTML = ''
+      link.appendChild(newLink)
+    }
+  </script>
+</body>
+</html>
